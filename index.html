@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Suivi Admin U13">
+<title>Suivi Administratif — U13 Limoges Football</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#111319; --surface:#1c202a; --surface-line:#2b303c;
+    --paper:#f1efe9; --mute:#8b8f9e;
+    --accent:#58b5e0; --accent-dim:rgba(88,181,224,0.16);
+    --danger:#d9707a; --danger-dim:rgba(217,112,122,0.16);
+    --ok:#6fbf8a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh; background:var(--ink); color:var(--paper);
+    font-family:'Inter', sans-serif; -webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom, 24px);
+  }
+  .wrap{ max-width:520px; margin:0 auto; padding:0 16px 32px; }
+
+  header{ padding:26px 4px 14px; text-align:center; }
+  .scoreboard{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'Inter', monospace; font-size:10.5px; letter-spacing:0.18em;
+    color:var(--mute); text-transform:uppercase; padding:5px 12px;
+    border:1px solid var(--surface-line); border-radius:999px; background:var(--surface);
+  }
+  .scoreboard b{ color:var(--accent); font-weight:700; }
+  h1{
+    font-family:'Barlow Condensed', sans-serif; font-weight:700; font-size:28px;
+    letter-spacing:0.01em; text-transform:uppercase; margin:12px 0 4px; line-height:1.05;
+  }
+  .subtitle{ color:var(--mute); font-size:13px; }
+
+  .whoami{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    margin:14px 0 4px; font-size:12.5px; color:var(--mute);
+  }
+  .whoami button{
+    background:var(--surface); border:1px solid var(--surface-line); color:var(--accent);
+    font-family:'Inter', sans-serif; font-size:12.5px; font-weight:600;
+    padding:5px 10px; border-radius:999px; cursor:pointer;
+  }
+
+  .new-btn{
+    display:block; width:100%; margin:18px 0 24px;
+    background:var(--accent); color:#0d1a22; border:none; border-radius:14px;
+    font-family:'Barlow Condensed', sans-serif; font-weight:700; font-size:16px;
+    text-transform:uppercase; letter-spacing:0.03em; padding:14px; cursor:pointer;
+  }
+  .new-btn:active{ opacity:0.85; }
+
+  section.group{ margin-bottom:14px; }
+  .group-title{
+    font-family:'Barlow Condensed', sans-serif; font-weight:600; font-size:13px;
+    letter-spacing:0.13em; text-transform:uppercase; color:var(--mute); margin:0 0 8px 4px;
+  }
+
+  .card{
+    background:var(--surface); border:1px solid var(--surface-line); border-radius:16px;
+    padding:14px 16px; margin-bottom:12px;
+  }
+  .card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .card-title{ font-family:'Barlow Condensed', sans-serif; font-weight:600; font-size:17px; text-transform:uppercase; }
+  .card-due{ font-size:11.5px; color:var(--mute); margin-top:3px; }
+  .card-due.late{ color:var(--danger); font-weight:600; }
+  .badge-count{
+    flex-shrink:0; font-family:'Barlow Condensed', sans-serif; font-weight:700; font-size:13px;
+    background:var(--danger-dim); color:var(--danger); border-radius:999px; padding:3px 10px; white-space:nowrap;
+  }
+  .badge-count.done{ background:rgba(111,191,138,0.16); color:var(--ok); }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; }
+  .chip{
+    font-size:12.5px; padding:6px 12px; border-radius:999px;
+    background:var(--danger-dim); color:var(--danger); border:none; cursor:pointer;
+    font-family:'Inter', sans-serif; font-weight:500;
+  }
+  .chip:active{ opacity:0.7; }
+  .chip.done{ background:rgba(111,191,138,0.14); color:var(--ok); text-decoration:line-through; opacity:0.7; }
+
+  .chip.selected{ background:var(--accent-dim); color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset; }
+  .card-actions{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:10px; }
+  .bulk-btn{
+    background:var(--accent); color:#0d1a22; border:none; border-radius:999px;
+    font-family:'Barlow Condensed', sans-serif; font-weight:700; font-size:13px;
+    padding:7px 14px; cursor:pointer; display:none;
+  }
+  .bulk-btn.show{ display:inline-block; }
+  .icon-btn{
+    background:none; border:none; color:var(--mute); font-size:11.5px;
+    font-family:'Inter', sans-serif; cursor:pointer; padding:4px 6px;
+  }
+
+  .empty{ text-align:center; color:var(--mute); font-size:13px; padding:30px 10px; }
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(6,7,10,0.72); display:none;
+    align-items:flex-end; justify-content:center; z-index:20;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:var(--surface); border:1px solid var(--surface-line);
+    border-radius:20px 20px 0 0; width:100%; max-width:520px;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+    max-height:88vh; overflow-y:auto;
+  }
+  .modal h2{
+    font-family:'Barlow Condensed', sans-serif; font-weight:700; font-size:20px;
+    text-transform:uppercase; margin:0 0 16px;
+  }
+  label{ display:block; font-size:12px; color:var(--mute); margin:14px 0 6px; }
+  input[type=text], input[type=date]{
+    width:100%; background:var(--ink); border:1px solid var(--surface-line); color:var(--paper);
+    border-radius:10px; padding:11px 12px; font-size:15px; font-family:'Inter', sans-serif;
+  }
+  .player-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-top:6px; }
+  .player-pill{
+    display:flex; align-items:center; gap:8px; background:var(--ink);
+    border:1px solid var(--surface-line); border-radius:10px; padding:9px 10px; font-size:13px;
+  }
+  .player-pill input{ accent-color:var(--accent); }
+  .select-row{ display:flex; gap:8px; margin-top:8px; }
+  .select-row button{
+    flex:1; background:var(--ink); border:1px solid var(--surface-line); color:var(--paper);
+    border-radius:10px; padding:8px; font-size:12.5px; font-family:'Inter', sans-serif; cursor:pointer;
+  }
+  .modal-actions{ display:flex; gap:10px; margin-top:20px; }
+  .modal-actions button{
+    flex:1; border:none; border-radius:12px; padding:13px; font-family:'Barlow Condensed', sans-serif;
+    font-weight:700; font-size:15px; text-transform:uppercase; cursor:pointer;
+  }
+  .btn-cancel{ background:var(--ink); color:var(--mute); border:1px solid var(--surface-line) !important; }
+  .btn-create{ background:var(--accent); color:#0d1a22; }
+
+  .loading{ text-align:center; color:var(--mute); font-size:13px; padding:40px 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="scoreboard"><b>U13</b> · Limoges Football</span>
+    <h1>Suivi Administratif</h1>
+    <div class="subtitle">Demandes aux joueurs &amp; échéances</div>
+  </header>
+
+  <div class="whoami">
+    <span id="whoami-label">Éducateur : —</span>
+    <button id="whoami-btn" type="button">changer</button>
+  </div>
+
+  <button class="new-btn" id="open-modal">+ Nouvelle demande</button>
+
+  <div id="content" class="loading">Chargement…</div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Nouvelle demande</h2>
+    <label for="f-libelle">Quoi</label>
+    <input type="text" id="f-libelle" placeholder="Ex. Rendre la fiche jonglerie">
+    <label for="f-echeance">Échéance</label>
+    <input type="date" id="f-echeance">
+    <label>Joueurs concernés</label>
+    <div class="select-row">
+      <button type="button" id="select-all">Tous</button>
+      <button type="button" id="select-none">Aucun</button>
+    </div>
+    <div class="player-grid" id="player-grid"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancel-modal" type="button">Annuler</button>
+      <button class="btn-create" id="submit-modal" type="button">Créer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQoNZTU0emOcWT9DKAIIoFwAiD23qMeb6jOp_I3AoDIHKJ-J6mlSy9rpLqbg4FH5I8lA/exec";
+
+  var JOUEURS = [
+    "Hadi", "Sebastien", "Mickaël", "Bakoutoubo", "Sacha", "Keys", "Nourou", "Yanis",
+    "Mathis", "Ethan", "Abdoul Karim", "Jalil", "Gabin", "Adam", "Kalifa", "Bilel",
+    "Pablo", "Melih", "Issam", "Emir", "Loan", "Sarah"
+  ];
+
+  var state = { joueurs: JOUEURS, demandes: [] };
+
+  function getEducateur(){ return localStorage.getItem('suiviAdmin_educateur') || ''; }
+  function setEducateur(name){ localStorage.setItem('suiviAdmin_educateur', name); renderWhoami(); }
+  function renderWhoami(){
+    var name = getEducateur();
+    document.getElementById('whoami-label').textContent = 'Éducateur : ' + (name || '—');
+  }
+  document.getElementById('whoami-btn').addEventListener('click', function(){
+    var name = prompt('Ton prénom (pour savoir qui a coché quoi) :', getEducateur() || '');
+    if (name && name.trim()) setEducateur(name.trim());
+  });
+
+  function fmtDate(d){
+    if (!d) return '';
+    var dt = new Date(d);
+    if (isNaN(dt)) return d;
+    return dt.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  }
+  function isLate(d){
+    if (!d) return false;
+    var dt = new Date(d); dt.setHours(23,59,59,999);
+    return dt.getTime() < Date.now();
+  }
+
+  function groupDemandes(rows){
+    var byId = {};
+    var order = [];
+    rows.forEach(function(r){
+      if (!byId[r.ID]) { byId[r.ID] = { id:r.ID, libelle:r.Libelle, echeance:r.Echeance, joueurs:[] }; order.push(r.ID); }
+      byId[r.ID].joueurs.push({ nom:r.Joueur, statut:r.Statut });
+    });
+    return order.map(function(id){ return byId[id]; });
+  }
+
+  function render(){
+    var groups = groupDemandes(state.demandes);
+    var el = document.getElementById('content');
+    if (!groups.length){
+      el.innerHTML = '<div class="empty">Aucune demande pour le moment.<br>Touche "+ Nouvelle demande" pour commencer.</div>';
+      return;
+    }
+    groups.sort(function(a,b){ return new Date(a.echeance) - new Date(b.echeance); });
+    var pending = groups.filter(function(g){ return g.joueurs.some(function(j){ return j.statut !== 'Fait'; }); });
+    var done = groups.filter(function(g){ return g.joueurs.every(function(j){ return j.statut === 'Fait'; }); });
+
+  var selections = {}; // { demandeId: Set(joueur) }
+
+  function cardHtml(g){
+    var pendingPlayers = g.joueurs.filter(function(j){ return j.statut !== 'Fait'; });
+    var donePlayers = g.joueurs.filter(function(j){ return j.statut === 'Fait'; });
+    var late = isLate(g.echeance) && pendingPlayers.length > 0;
+    var countBadge = pendingPlayers.length === 0
+      ? '<span class="badge-count done">Tout rendu</span>'
+      : '<span class="badge-count">' + pendingPlayers.length + ' en attente</span>';
+    var sel = selections[g.id] || new Set();
+    var chips = pendingPlayers.map(function(j){
+      var isSel = sel.has(j.nom);
+      return '<button class="chip select' + (isSel ? ' selected' : '') + '" data-id="' + g.id + '" data-joueur="' + escapeAttr(j.nom) + '">' + escapeHtml(j.nom) + '</button>';
+    }).join('') + donePlayers.map(function(j){
+      return '<button class="chip done" data-id="' + g.id + '" data-joueur="' + escapeAttr(j.nom) + '" data-statut="En attente">' + escapeHtml(j.nom) + '</button>';
+    }).join('');
+    var n = sel.size;
+    return '<div class="card">' +
+      '<div class="card-head">' +
+        '<div><div class="card-title">' + escapeHtml(g.libelle) + '</div>' +
+        '<div class="card-due' + (late ? ' late' : '') + '">Échéance : ' + fmtDate(g.echeance) + (late ? ' · en retard' : '') + '</div></div>' +
+        countBadge +
+      '</div>' +
+      '<div class="chips">' + chips + '</div>' +
+      '<div class="card-actions">' +
+        '<button class="icon-btn" data-delete="' + g.id + '">Supprimer la demande</button>' +
+        (pendingPlayers.length ? '<button class="bulk-btn' + (n ? ' show' : '') + '" data-bulk="' + g.id + '">Marquer fait (' + n + ')</button>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+    var html = '';
+    if (pending.length){
+      html += '<section class="group"><div class="group-title">En cours</div>' + pending.map(cardHtml).join('') + '</section>';
+    }
+    if (done.length){
+      html += '<section class="group"><div class="group-title">Terminées</div>' + done.map(cardHtml).join('') + '</section>';
+    }
+    el.innerHTML = html;
+
+    el.querySelectorAll('.chip.select').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.dataset.id, joueur = btn.dataset.joueur;
+        if (!selections[id]) selections[id] = new Set();
+        if (selections[id].has(joueur)) selections[id].delete(joueur); else selections[id].add(joueur);
+        render();
+      });
+    });
+    el.querySelectorAll('.chip.done').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        marquerStatut(btn.dataset.id, btn.dataset.joueur, btn.dataset.statut);
+      });
+    });
+    el.querySelectorAll('[data-bulk]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.dataset.bulk;
+        var joueurs = Array.from(selections[id] || []);
+        if (!joueurs.length) return;
+        marquerPlusieurs(id, joueurs);
+      });
+    });
+    el.querySelectorAll('[data-delete]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if (confirm('Supprimer définitivement cette demande ?')) supprimerDemande(btn.dataset.delete);
+      });
+    });
+  }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  function apiGet(){
+    return fetch(SCRIPT_URL).then(function(r){ return r.json(); });
+  }
+  function apiPost(payload){
+    return fetch(SCRIPT_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    }).then(function(r){ return r.json(); });
+  }
+
+  function load(){
+    document.getElementById('content').innerHTML = '<div class="loading">Chargement…</div>';
+    apiGet().then(function(data){ state.demandes = data.demandes || []; render(); })
+      .catch(function(){ document.getElementById('content').innerHTML = '<div class="empty">Connexion impossible. Vérifie SCRIPT_URL.</div>'; });
+  }
+
+  function marquerStatut(id, joueur, statut){
+    var educateur = getEducateur();
+    if (!educateur){ alert("Indique d'abord ton prénom (bouton \u00ab changer \u00bb en haut)."); return; }
+    apiPost({ action:'marquerStatut', id:id, joueur:joueur, statut:statut, educateur:educateur }).then(function(data){ delete selections[id]; state.demandes = data.demandes; render(); });
+  }
+  function marquerPlusieurs(id, joueurs){
+    var educateur = getEducateur();
+    if (!educateur){ alert("Indique d'abord ton prénom (bouton \u00ab changer \u00bb en haut)."); return; }
+    apiPost({ action:'marquerPlusieurs', id:id, joueurs:joueurs, statut:'Fait', educateur:educateur }).then(function(data){ delete selections[id]; state.demandes = data.demandes; render(); });
+  }
+  function supprimerDemande(id){
+    apiPost({ action:'supprimerDemande', id:id }).then(function(data){ state.demandes = data.demandes; render(); });
+  }
+
+  // Modal
+  var overlay = document.getElementById('overlay');
+  document.getElementById('open-modal').addEventListener('click', openModal);
+  document.getElementById('cancel-modal').addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
+
+  function openModal(){
+    document.getElementById('f-libelle').value = '';
+    document.getElementById('f-echeance').value = '';
+    var grid = document.getElementById('player-grid');
+    grid.innerHTML = state.joueurs.map(function(j){
+      return '<label class="player-pill"><input type="checkbox" value="' + escapeAttr(j) + '">' + escapeHtml(j) + '</label>';
+    }).join('');
+    overlay.classList.add('open');
+  }
+  function closeModal(){ overlay.classList.remove('open'); }
+
+  document.getElementById('select-all').addEventListener('click', function(){
+    document.querySelectorAll('#player-grid input').forEach(function(cb){ cb.checked = true; });
+  });
+  document.getElementById('select-none').addEventListener('click', function(){
+    document.querySelectorAll('#player-grid input').forEach(function(cb){ cb.checked = false; });
+  });
+
+  document.getElementById('submit-modal').addEventListener('click', function(){
+    var libelle = document.getElementById('f-libelle').value.trim();
+    var echeance = document.getElementById('f-echeance').value;
+    var joueurs = Array.prototype.slice.call(document.querySelectorAll('#player-grid input:checked')).map(function(cb){ return cb.value; });
+    var educateur = getEducateur();
+    if (!educateur){ alert("Indique d'abord ton prénom (bouton \u00ab changer \u00bb en haut)."); return; }
+    if (!libelle){ alert('Indique ce que tu demandes.'); return; }
+    if (!echeance){ alert("Indique une échéance."); return; }
+    if (!joueurs.length){ alert('Sélectionne au moins un joueur.'); return; }
+    apiPost({ action:'creerDemande', libelle:libelle, echeance:echeance, joueurs:joueurs, educateur:educateur })
+      .then(function(data){ state.demandes = data.demandes; render(); closeModal(); });
+  });
+
+  renderWhoami();
+  load();
+</script>
+</body>
+</html>
